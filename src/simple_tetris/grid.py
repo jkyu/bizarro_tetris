@@ -9,6 +9,9 @@ class VisibleRow:
     def __gt__(self, other):
         return self.height > other.height
 
+    def __eq__(self, other):
+        return self.height == other.height
+
 class Grid:
     def __init__(self):
         # set up sentinels
@@ -27,9 +30,12 @@ class Grid:
     def get_visible_row_by_column(self, column: int) -> VisibleRow:
         return self.visible_rows[column]
 
-    def get_next_n_rows(self, visible_row: VisibleRow, n: int) -> List[Row]:
+    def get_next_n_rows(self, visible_row: VisibleRow, n: int, include_current_row: bool = False) -> List[Row]:
         next_n_rows = []
         curr_row = visible_row.row
+        if include_current_row:
+            next_n_rows.append(curr_row)
+            n -= 1
         for _ in range(n):
             curr_row = self.get_next_row_or_make_new_row(curr_row)
             next_n_rows.append(curr_row)
@@ -46,7 +52,7 @@ class Grid:
             self.height += 1
         return curr_row.next_row
 
-    def fill_columns_in_row(self, row: Row, columns: List[int], height: int):
+    def fill_columns_in_row(self, row: Row, columns: Tuple[int], height: int):
         for column in columns:
             row.place_in_column(column)
         # clear the row if it is complete or update row visibility

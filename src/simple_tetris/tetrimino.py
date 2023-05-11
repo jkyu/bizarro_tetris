@@ -1,58 +1,156 @@
+from simple_tetris.grid import Grid
+from simple_tetris.row import Row
 from abc import ABC, abstractmethod
 
 class Tetrimino(ABC):
 
     def __init__(self, left_column):
         self.left_column = left_column
-        self.columns_to_check = self.get_columns_to_check(left_column)
 
+    @property
     @abstractmethod
-    def get_columns_to_check(self, left_column):
+    def shape(self):
+        pass
+
+    @property
+    @abstractmethod
+    def collision_columns(self):
         pass
 
     @abstractmethod
     def place_on_grid(self, grid):
         pass
 
-    @abstractmethod
-    def get_rows_for_placement(self, grid):
-        pass
+    def get_visible_rows_in_collision_columns(self, grid: Grid):
+        return [grid.get_visible_row_by_column(column) for column in self.collision_columns]
 
-class Q_block(Tetrimino):
+    def finalize_placement(self, grid: Grid, rows_for_placement: List[Row], height: int):
+        for row, columns in enumerate(self.shape):
+            shifted_columns = (column + self.offset for column in columns)
+            grid.fill_columns_in_row(rows_for_placement[row], shifted_columns, height+row)
 
-    def get_columns_to_check(self, left_column):
-        return (left_column, left_column+1)
+class IJLQBlock(Tetrimino):
 
-    def place_on_grid(self, grid):
+    def place_on_grid(self, grid: Grid):
         """
-        Resolve collisions and return the lowest row the block will occupy.
-        Place Q block on grid. If the rows currently do not exist, they will be generated.
+        Place I, J, L or Q block on grid. These four blocks will be placed depending on the row
+        the bottom row of block pieces collide with.
         """
-        left_col, right_col = self.columns_to_check
-        left_row = grid.get_curr_row_by_column(left_col)
-        right_row = grid.get_curr_row_by_column(right_col)
-        curr_row = max(left_row, right_row)
-        rows_for_placement = grid.get_next_n_rows(curr_row, 2)
-        for i, row in enumerate(rows_for_placement):
-            grid.fill_columns_in_row(row, self.columns_to_check, curr_row.height+i+1)
+        visible_rows = self.get_visible_rows_in_collision_columns(grid)
 
-class Z_block(Tetrimino):
+        # the I, J, L or Q block is placed on top of the highest visible row
+        highest_visible_row = max(visible_rows)
+        rows_for_placement = grid.get_next_n_rows(highest_visible_row, len(self.shape))
+        starting_height_for_block = highest_visible_row.height + 1
+
+        # finalize block placement on grid
+        self.finalize_placement(grid, rows_for_placement, starting_height_for_block)
+
+class IBlock(IJLQBlock):
+
+    shape = [[0, 1, 2, 3]]
+    collision_columns = [[0, 1, 2, 3]]
+
+class LBlock(IJLQBlock):
+
+    shape = [[0, 1], [0], [0]]
+    collision_columns = [0, 1]
+
+class JBlock(IJLQBlock):
+
+    shape = [[0, 1], [1], [1]]
+    collision_columns = [0, 1]
+
+class QBlock(IJLQBlock):
+
+    shape = [[0, 1], [0, 1]]
+    collision_columns = [0, 1]
+
+class TBlock(Tetrimino):
     
-    def get_columns_to_check(self, left_column):
-        return (left_column, left_column+1, left_column+2)
+    shape = [[1], [0, 1, 2]]
+    collision_columns = [0, 1, 2]
 
-    def get_rows_for_placement(self, grid):
-        curr_highest_rows = [grid.get_curr_row_by_column(col) for col in self.columns_to_check]
-        # check for cliffhanger pattern - this works with the edge condition where
-        # all three columns are of equal height, e.g., in the case of a clean grid
-        if curr_highest_rows[0] > curr_highest_rows[1] and curr_highest_rows[0] > curr_highest_rows[2]:
-            curr_row = grid.get_curr_row_by_column(self.columns_to_check[0])
-            rows_for_placement = grid.get_next_n_rows(curr_row.prev_row)
-        # not cliffhanger, so place on top of whichever of cols 1 or 2 is higher
+    def place_on_grid(self, grid: Grid):
+        """
+        Place T block on grid.
+        In cases 1-3, the starting height for the block is the same height as the visible
+        row where the collision occurs. In case 4, the starting height for the block is one
+        row higher than the visible row where the collision occurs.
+        """
+        visible_rows = self.get_visible_rows_in_collision_columns(grid)
+        
+        # Case 1: T block hangs on left side
+        if visible_rows[0] > visible_rows[1] and visible_rows[0] > visible_rows[2]:
+            rows_for_placement = grid.get_next_n_rows(visible_rows[0], len(self.shape), True)
+            starting_height_for_block = visible_rows[0].height
+        # Case 2: T block hangs on right side
+        elif visible_rows[2] > visible_rows[1] and visible_rows[2] > visible_rows[0]:
+            rows_for_placement = grid.get_next_n_rows(visible_rows[2], len(self.shape), True)
+            starting_height_for_block = visible_rows[2].height
+        # Case 3: T block hangs on both left and right sides
+        elif visible_rows[0] > visible_rows[1] and visible_rows[0] == visible_rows[2]:
+            rows_for_placement = grid.get_next_n_rows(visible_rows[0], len(self.shape), True)
+            starting_height_for_block = visible_rows[0].height
+        # Case 4: the bottom of the T is immediately on top of another block.
         else:
-            curr_row = max(
-                grid.get_curr_row_by_column(self.columns_to_check[1]),
-                grid.get_curr_row_by_column(self.columns_to_check[2])
-            )
-            rows_for_placement = grid.get_next_n_rows(curr_row)
-        return rows_for_placement
+            rows_for_placement = grid.get_next_n_rows(visible_rows[1], len(self.shape))
+            starting_height_for_block = visible_rows[1].height + 1
+
+        # finalize block placement on grid
+        self.finalize_placement(grid, rows_for_placement, starting_height_for_block)
+
+class SBlock(Tetrimino):
+
+    shape = [[0, 1], [1, 2]]
+    collision_columns = [0, 1, 2]
+
+    def place_on_grid(self, grid: Grid):
+        """
+        Place S block on grid.
+        In case 1, the starting height for the block is the same height as the visible
+        row where the collision occurs. In case 2, the starting height for the block is one
+        row higher than the visible row where the collision occurs.
+        """
+        visible_rows = self.get_visible_rows_in_collision_columns(grid)
+        
+        # Case 1: S block hangs on the right side or fits "perfectly"
+        if visible_rows[2] > visible_rows[0] and visible_rows[2] > visible_rows[1]:
+            rows_for_placement = grid.get_next_n_rows(visible_rows[2], len(self.shape), True)
+            starting_height_for_block = visible_rows[2].height
+        # Case 2: the bottom row of the S block is immediately on top of another block
+        else:
+            highest_visible_row = visible_rows[0] if visible_rows[0] > visible_rows[1] else visible_rows[1]
+            rows_for_placement = grid.get_next_n_rows(highest_visible_row, len(self.shape))
+            starting_height_for_block = highest_visible_row.height + 1
+
+        # finalize block placement on grid
+        self.finalize_placement(grid, rows_for_placement, starting_height_for_block)
+
+
+class ZBlock(Tetrimino):
+
+    shape = [[1, 2], [0, 1]]
+    collision_columns = [0, 1, 2]
+
+    def place_on_grid(self, grid: Grid):
+        """
+        Place Z block on grid.
+        In case 1, the starting height for the block is the same height as the visible
+        row where the collision occurs. In case 2, the starting height for the block is one
+        row higher than the visible row where the collision occurs.
+        """
+        visible_rows = self.get_visible_rows_in_collision_columns(grid)
+        
+        # Case 1: Z block hangs on the left side or fits "perfectly"
+        if visible_rows[0] > visible_rows[1] and visible_rows[0] > visible_rows[2]:
+            rows_for_placement = grid.get_next_n_rows(visible_rows[0], len(self.shape), True)
+            starting_height_for_block = visible_rows[0].height
+        # Case 2: the bottom row of the S block is immediately on top of another block
+        else:
+            highest_visible_row = visible_rows[2] if visible_rows[2] > visible_rows[1] else visible_rows[1]
+            rows_for_placement = grid.get_next_n_rows(highest_visible_row, len(self.shape))
+            starting_height_for_block = highest_visible_row.height + 1
+
+        # finalize block placement on grid
+        self.finalize_placement(grid, rows_for_placement, starting_height_for_block)
