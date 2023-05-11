@@ -1,10 +1,11 @@
-from simple_tetris.row import Row, Floor, Ceiling
+from simpletetris.row import Row, Floor, Ceiling
 from typing import List, Tuple
 
 class VisibleRow:
     """Tracker for the row that is visible from the top of the stack."""
-    row: Row
-    height: int
+    def __init__(self, row: Row, height: int):
+        self.row = row
+        self.height = height
 
     def __gt__(self, other):
         return self.height > other.height
@@ -27,6 +28,17 @@ class Grid:
         # these rows are 'visible' from the top of the stack
         self.visible_rows = [VisibleRow(self.floor, 0) for _ in range(10)]
 
+    def print_grid(self):
+        print()
+        curr_row = self.ceiling.prev_row
+        while curr_row is not self.floor:
+            line = ["o"]*10
+            for empty_column in curr_row.empty_columns:
+                line[empty_column] = "-"
+            print("".join(line))
+            curr_row = curr_row.prev_row
+        print("0123456789")
+
     def get_visible_row_by_column(self, column: int) -> VisibleRow:
         return self.visible_rows[column]
 
@@ -46,13 +58,14 @@ class Grid:
         if curr_row.next_row is self.ceiling:
             new_row = Row()
             new_row.next_row = self.ceiling
+            new_row.prev_row = curr_row
             curr_row.next_row = new_row
             self.ceiling.prev_row = new_row
             # increment stack height every time a new row is made
             self.height += 1
         return curr_row.next_row
 
-    def fill_columns_in_row(self, row: Row, columns: Tuple[int], height: int):
+    def fill_columns_in_row(self, row: Row, columns: List[int], height: int):
         for column in columns:
             row.place_in_column(column)
         # clear the row if it is complete or update row visibility

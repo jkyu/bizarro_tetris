@@ -1,11 +1,12 @@
-from simple_tetris.grid import Grid
-from simple_tetris.row import Row
+from simpletetris.grid import Grid, VisibleRow
+from simpletetris.row import Row
 from abc import ABC, abstractmethod
+from typing import List
 
 class Tetrimino(ABC):
 
-    def __init__(self, left_column):
-        self.left_column = left_column
+    def __init__(self, offset):
+        self.offset = offset
 
     @property
     @abstractmethod
@@ -21,12 +22,12 @@ class Tetrimino(ABC):
     def place_on_grid(self, grid):
         pass
 
-    def get_visible_rows_in_collision_columns(self, grid: Grid):
-        return [grid.get_visible_row_by_column(column) for column in self.collision_columns]
+    def get_visible_rows_in_collision_columns(self, grid: Grid) -> List[VisibleRow]:
+        return [grid.get_visible_row_by_column(column+self.offset) for column in self.collision_columns]
 
     def finalize_placement(self, grid: Grid, rows_for_placement: List[Row], height: int):
         for row, columns in enumerate(self.shape):
-            shifted_columns = (column + self.offset for column in columns)
+            shifted_columns = [column + self.offset for column in columns]
             grid.fill_columns_in_row(rows_for_placement[row], shifted_columns, height+row)
 
 class IJLQBlock(Tetrimino):
@@ -49,7 +50,7 @@ class IJLQBlock(Tetrimino):
 class IBlock(IJLQBlock):
 
     shape = [[0, 1, 2, 3]]
-    collision_columns = [[0, 1, 2, 3]]
+    collision_columns = [0, 1, 2, 3]
 
 class LBlock(IJLQBlock):
 
