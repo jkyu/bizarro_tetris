@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61.0", "pytest>=7.3.1"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -17,4 +17,4 @@ classifiers = [
 ]
 
 [project.scripts]
-simpletetris = "simpletetris.tetris:main_cli"
+tetris = "simpletetris.tetris:main_cli"

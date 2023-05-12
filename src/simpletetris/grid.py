@@ -1,5 +1,5 @@
 from simpletetris.row import Row, Floor, Ceiling
-from typing import List, Tuple
+from typing import List
 
 NUM_COLUMNS = 10
 MAX_TIMESTAMP = 1000

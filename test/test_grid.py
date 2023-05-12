@@ -60,18 +60,26 @@ class TestGrid:
     def test_get_next_row_or_make_new_row_get_next_row(self, grid: Grid):
         """
         Test scenario where get_next_row_or_make_new_row() returns an existing row.
+        The height of the grid is incremented when a new row is inserted, so also
+        test that the height does not change when returning an existing row.
         """
         curr_row = grid.floor
         expected_row = curr_row.next_row
+        expected_height = grid.height
         next_row = grid.get_next_row_or_make_new_row(curr_row)
         assert next_row is expected_row
+        # height of grid does not change
+        assert grid.height == expected_height
 
     def test_get_next_row_or_make_new_row_make_new_row(self, grid: Grid):
         """
         Test scenario where get_next_row_or_make_new_row() returns a new row.
+        The height of the grid is incremented when a new row is inserted, so also
+        test that the height increases when returning an existing row.
         """
         curr_row = grid.ceiling.prev_row
         curr_timestamp = grid.timestamp
+        expected_height = grid.height + 1
         next_row = grid.get_next_row_or_make_new_row(curr_row)
 
         # make sure the ceiling is not returned
@@ -79,6 +87,8 @@ class TestGrid:
         # new row generated should cause timestamp to increment
         assert grid.timestamp == curr_timestamp + 1
         assert next_row.timestamp == grid.timestamp
+        # height of grid increases
+        assert grid.height == expected_height
 
     def test_get_next_n_rows_exclude_current_row_get_existing_rows(self, grid: Grid):
         """
