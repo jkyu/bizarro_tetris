@@ -1,8 +1,7 @@
 import pytest
 
 from simpletetris import tetris
-from simpletetris.grid import Grid
-from simpletetris.row import Row
+from simpletetris.grid import Grid, Row
 
 
 @pytest.fixture

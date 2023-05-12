@@ -1,9 +1,76 @@
 from typing import List
 
-from simpletetris.row import Ceiling, Floor, Row
-
 NUM_COLUMNS = 10
 MAX_TIMESTAMP = 1000
+
+class Row:
+    """
+    A class for modeling each row in the tetris grid. It holds information
+    about the unoccupied columns under the assumption that the tetris grid
+    is usually dense. This serves as a node in the doubly linked list used
+    to represent the grid.
+
+    Attributes
+    ----------
+    prev_row: Row
+        This points to the row directly below this row in the current state
+        of the grid.
+    next_row: Row
+        This points to the row directly above this row in the current state
+        of the grid.
+    empty_columns: Set[int]
+        A hash set containing the indices for columns that are currently not
+        occupied in this row. A completed row will have an empty set.
+    timestamp: int
+        A unique identifier for the row. A row with a larger timestamp will
+        always be higher in the tetris stack than a row with a smaller timestamp
+        because new rows are added to the top of the grid monotonically.
+    """
+    def __init__(self, prev_row: "Row"=None, next_row: "Row"=None, timestamp: int=0):
+        self.prev_row = prev_row
+        self.next_row = next_row
+        self.empty_columns = set(range(NUM_COLUMNS))
+        self.timestamp = timestamp
+
+    def is_complete(self) -> bool:
+        return len(self.empty_columns) == 0
+
+    def place_in_column(self, column: int):
+        self.empty_columns.remove(column)
+
+class Floor:
+    """
+    A sentinel node that serves as the bottom of the grid.
+    The floor cannot be occupied by a tetris block.
+
+    Attributes
+    ----------
+    next_row: Row
+        The row directly above the bottom of the grid. It is either the
+        first row of the tetris stack or the ceiling when the grid is empty
+    timestamp: int
+        The minimum timestamp. All other rows have larger timestamps.
+    """
+    def __init__(self):
+        self.next_row = None
+        self.timestamp = 0
+
+class Ceiling:
+    """
+    A sentinel node that serves as the top of the grid.
+    The ceiling cannot be occupied by a tetris block.
+
+    Attributes
+    ----------
+    prev_row: Row
+        The row directly below the top of the grid. It is either the
+        highest row of the tetris stack or the floor when the grid is empty
+    timestamp: int
+        The maximum timestamp. All other rows have smaller timestamps.
+    """
+    def __init__(self):
+        self.prev_row = None
+        self.timestamp = float("inf")
 
 class VisibleRow:
     """
@@ -24,10 +91,10 @@ class VisibleRow:
     def timestamp(self):
         return self.row.timestamp
 
-    def __gt__(self, other):
+    def __gt__(self, other: "VisibleRow") -> bool:
         return self.timestamp > other.timestamp
 
-    def __eq__(self, other):
+    def __eq__(self, other: "VisibleRow") -> bool:
         return self.timestamp == other.timestamp
 
 class Grid:
@@ -92,16 +159,20 @@ class Grid:
         """
         return self.visible_rows[column]
 
-    def get_next_n_rows(
-            self,
-            visible_row: VisibleRow,
-            n: int,
-            include_current_row: bool = False
-            ) -> List[Row]:
+    def get_next_n_rows(self, visible_row: VisibleRow, n: int, include_current_row: bool = False) -> List[Row]:
         """
-        Return the next n rows starting from the visible_row. Set include_current_row to True to include
-        the visible_row in the count. If not enough rows currently exist in the grid, they will be created
-        so that n rows can be returned.
+        Return the next n rows starting from the visible_row. If not enough
+        rows currently exist in the grid, they will be created so that n rows
+        can be returned.
+
+        Parameters
+        ----------
+        visible_row: VisibleRow
+            The row from which to start counting.
+        n: int
+            Number of rows to retrieve.
+        include_current_row: bool
+            Whether to include the currently visible row in the n rows returned.
         """
         next_n_rows = []
         curr_row = visible_row.row
@@ -115,10 +186,9 @@ class Grid:
 
     def prevent_timestamp_overflow(self):
         """
-        Re-stamp all rows if the max timestamp is exceeded.
-        This works because rows are timestamped in monotonic order.
-        This also assumes that the grid will never have more than 100 rows, as
-        specified by the prompt.
+        Re-stamp all rows if the max timestamp is exceeded. This works because rows
+        are timestamped in monotonic order. This also assumes that the grid will
+        never have more than MAX_TIMESTAMP simultaneous rows.
         """
         if self.timestamp > MAX_TIMESTAMP:
             new_stamp = 0
@@ -132,6 +202,10 @@ class Grid:
     def get_next_row_or_make_new_row(self, curr_row: Row) -> Row:
         """
         If next row is the tail sentinel, make a new row and insert it.
+
+        Parameters
+        ----------
+        curr_row: Row
         """
         if curr_row.next_row is self.ceiling:
             self.timestamp += 1
@@ -139,8 +213,7 @@ class Grid:
             new_row = Row(
                 prev_row = curr_row,
                 next_row = self.ceiling,
-                timestamp=self.timestamp,
-                num_columns=NUM_COLUMNS
+                timestamp=self.timestamp
             )
             curr_row.next_row = new_row
             self.ceiling.prev_row = new_row
@@ -154,6 +227,12 @@ class Grid:
         is no protection against illegal moves here. If a row is completed
         by filling the specified columns, the row will be removed. Otherwise,
         row visibility will be updated as necessary.
+
+        Parameters
+        ----------
+        row: Row
+        columns: List[int]
+            The columns that will be occupied in this row.
         """
         for column in columns:
             row.place_in_column(column)
@@ -174,6 +253,10 @@ class Grid:
         tetris, rows generally will be removed closer to the top of the stack, but this
         still saves work in that work to find the newly visible row only needs to be performed
         upon removing a currently visible row.
+
+        Parameters
+        ----------
+        row: Row
         """
         row.prev_row.next_row = row.next_row
         row.next_row.prev_row = row.prev_row
