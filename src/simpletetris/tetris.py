@@ -1,8 +1,8 @@
 from simpletetris.grid import Grid
 from simpletetris.tetrimino import IBlock, JBlock, LBlock, QBlock, SBlock, TBlock, ZBlock
 from typing import List, Tuple
-import sys
 import argparse
+import sys
 
 def spawn_tetrimino(name: str, offset: int):
     match name:

@@ -1,5 +1,5 @@
 from simpletetris import tetris
-from simpletetris.grid import Grid, VisibleRow
+from simpletetris.grid import Grid
 from simpletetris.row import Row
 import pytest
 

@@ -1,6 +1,6 @@
+from abc import ABC, abstractmethod
 from simpletetris.grid import Grid, VisibleRow
 from simpletetris.row import Row
-from abc import ABC, abstractmethod
 from typing import List
 
 class Tetrimino(ABC):
