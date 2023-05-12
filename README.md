@@ -1,5 +1,8 @@
 # Simple Tetris
 
+## Requirements
+- Python >= 3.10
+
 ## Running the tetris engine
 Running the tetris engine requires installing it as a python package. In the same directory as this README, run:
 ```
