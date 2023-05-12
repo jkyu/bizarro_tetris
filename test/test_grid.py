@@ -1,6 +1,8 @@
+import pytest
+
 from simpletetris.grid import Grid, VisibleRow
 from simpletetris.row import Row
-import pytest
+
 
 @pytest.fixture
 def grid():

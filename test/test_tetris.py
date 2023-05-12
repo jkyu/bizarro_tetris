@@ -1,6 +1,7 @@
 from simpletetris import tetris
 from simpletetris.grid import Grid
 
+
 class TestTetris:
     def test_play_input_line_sequence1(self):
         test_sequence1 = [("I", 0), ("I", 4), ("Q", 8)]

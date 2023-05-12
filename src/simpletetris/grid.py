@@ -1,13 +1,21 @@
-from simpletetris.row import Row, Floor, Ceiling
 from typing import List
+
+from simpletetris.row import Ceiling, Floor, Row
 
 NUM_COLUMNS = 10
 MAX_TIMESTAMP = 1000
 
 class VisibleRow:
     """
-    Tracker for the row that is visible from the top of the stack.
-    The row is visible in a column if it is the highest row in that column.
+    A class that tracks the row visible from the top of each column.
+    In other words, the visible row is the highest row in a column.
+    Only visible rows are candidates for collisions with newly introduced
+    tetris pieces.
+
+    Attributes
+    ----------
+    row: Row
+        the row that is currently visible
     """
     def __init__(self, row: Row):
         self.row = row
@@ -23,21 +31,37 @@ class VisibleRow:
         return self.timestamp == other.timestamp
 
 class Grid:
+    """
+    A class that represents the tetris grid and all operations on the grid.
+    The grid is represented as a doubly linked list of rows.
+
+    Attributes:
+    ----------
+    floor: Row
+        A marker for the bottom of the grid. This serves as the head sentinel for
+        the linked list and does not count toward the height of the tetris stack.
+    ceiling: Row
+        A marker for the top of the grid. This serves as the tail sentinel for the
+        linked list and does not count toward the height of the tetris stack.
+    height: int
+        The height of the stack. This is the maximum height over all of the columns
+        at any time.
+    timestamp: int
+        A counter for the unique number of rows that have been occupied in the grid.
+        Because the grid is represented as a linked list, a cleared line simply
+        disappears from the grid. New rows are introduced to the tetris stack
+        monotonically, so the timestamp is a unique and ordered identifier for each row.
+    visible_rows: List[VisibleRow]
+        An index for the currently visible row in each column.
+    """
     def __init__(self):
         # set up doubly-linked list of rows with floor and ceiling sentinels.
-        # the floor and ceiling are "fake" rows that serve as upper and lower
-        # boundary guards and do not count toward the height of the stack
         self.floor = Floor()
         self.ceiling = Ceiling()
         self.floor.next_row = self.ceiling
         self.ceiling.prev_row = self.floor
 
-        # set up tracker for stack height
         self.height = 0
-
-        # new rows are introduced to the stack monotonically, so a timestamp
-        # works as a unique identifier for each row. this is incremented each
-        # time a row is added to the stack.
         self.timestamp = 0
 
         # the only row that is initially visible is the floor
@@ -59,9 +83,21 @@ class Grid:
         print("   |0123456789|")
 
     def get_visible_row_by_column(self, column: int) -> VisibleRow:
+        """
+        Return the currently visible row in a specified column.
+
+        Parameters
+        ----------
+        column: int
+        """
         return self.visible_rows[column]
 
-    def get_next_n_rows(self, visible_row: VisibleRow, n: int, include_current_row: bool = False) -> List[Row]:
+    def get_next_n_rows(
+            self,
+            visible_row: VisibleRow,
+            n: int,
+            include_current_row: bool = False
+            ) -> List[Row]:
         """
         Return the next n rows starting from the visible_row. Set include_current_row to True to include
         the visible_row in the count. If not enough rows currently exist in the grid, they will be created

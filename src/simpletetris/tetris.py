@@ -1,8 +1,11 @@
-from simpletetris.grid import Grid
-from simpletetris.tetrimino import IBlock, JBlock, LBlock, QBlock, SBlock, TBlock, ZBlock
-from typing import List, Tuple
 import argparse
 import sys
+from typing import List, Tuple
+
+from simpletetris.grid import Grid
+from simpletetris.tetrimino import (IBlock, JBlock, LBlock, QBlock, SBlock,
+                                    TBlock, ZBlock)
+
 
 def spawn_tetrimino(name: str, offset: int):
     match name:
