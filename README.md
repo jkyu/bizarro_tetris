@@ -13,13 +13,21 @@ tetris < input.txt > output.txt
 
 By default, verbose mode is off so as to not interfere with validation. However, the user can inspect the tetris grid visually after each input line by using the `--verbose` flag.
 
+## Testing
+A test suite leveraging `pytest` is included here to verify that the components of the simplified tetris engine run correctly.
+To run the test suite, enter the command:
+```
+pytest
+```
+in the same directory as this README.
+
 ## Design decisions
 It is possible that the reader may find the choice to represent the tetris grid as a doubly linked list of rows to be interesting.
 The more obvious choice of representation would be an array-based solution, like a list of lists, for example. 
 I wanted to explore the doubly linked list solution because of several advantages that I would like to justify here.
 Most notably, a row can be removed from the grid in constant time and memory by dropping the row from the linked list.
 This makes the removal of low rows really nice, especially if there is a large stack above the cleared row.
-The array-based approaches have a weakness in this regard. 
+The array-based approaches have a weakness in this regard.
 Options for excising a cleared row with an array-based implementation include:
 - making a new outer list that excludes cleared row, e.g., by slicing and then concatenating to remove the cleared row. This incurs the cost of traversing all rows to build a new list and the memory cost of allocating all rows to the new outer list.
 - moving the tetris stack one unit down, which incurs the cost modifying all of the rows above the cleared row. This gets worse if the cleared row is lower in the tetris stack.
