@@ -5,8 +5,11 @@ NUM_COLUMNS = 10
 MAX_TIMESTAMP = 1000
 
 class VisibleRow:
-    """Tracker for the row that is visible from the top of the stack."""
-    def __init__(self, row: Row, height: int):
+    """
+    Tracker for the row that is visible from the top of the stack.
+    The row is visible in a column if it is the highest row in that column.
+    """
+    def __init__(self, row: Row):
         self.row = row
 
     @property
@@ -21,7 +24,9 @@ class VisibleRow:
 
 class Grid:
     def __init__(self):
-        # set up sentinels
+        # set up doubly-linked list of rows with floor and ceiling sentinels.
+        # the floor and ceiling are "fake" rows that serve as upper and lower
+        # boundary guards and do not count toward the height of the stack
         self.floor = Floor()
         self.ceiling = Ceiling()
         self.floor.next_row = self.ceiling
@@ -29,13 +34,20 @@ class Grid:
 
         # set up tracker for stack height
         self.height = 0
+
+        # new rows are introduced to the stack monotonically, so a timestamp
+        # works as a unique identifier for each row. this is incremented each
+        # time a row is added to the stack.
         self.timestamp = 0
 
-        # set up hash map to track the highest row in each column
-        # these rows are 'visible' from the top of the stack
-        self.visible_rows = [VisibleRow(self.floor, 0) for _ in range(NUM_COLUMNS)]
+        # the only row that is initially visible is the floor
+        self.visible_rows = [VisibleRow(self.floor) for _ in range(NUM_COLUMNS)]
 
     def print_grid(self):
+        """
+        Print the tetris board out to command line. "o" indicates an occupied
+        cell in the grid and "-" indicates an empty cell.
+        """
         print(f"Grid State: stack height = {self.height}")
         curr_row = self.ceiling.prev_row
         while curr_row is not self.floor:
@@ -50,6 +62,11 @@ class Grid:
         return self.visible_rows[column]
 
     def get_next_n_rows(self, visible_row: VisibleRow, n: int, include_current_row: bool = False) -> List[Row]:
+        """
+        Return the next n rows starting from the visible_row. Set include_current_row to True to include
+        the visible_row in the count. If not enough rows currently exist in the grid, they will be created
+        so that n rows can be returned.
+        """
         next_n_rows = []
         curr_row = visible_row.row
         if include_current_row:
@@ -64,6 +81,8 @@ class Grid:
         """
         Re-stamp all rows if the max timestamp is exceeded.
         This works because rows are timestamped in monotonic order.
+        This also assumes that the grid will never have more than 100 rows, as
+        specified by the prompt.
         """
         if self.timestamp > MAX_TIMESTAMP:
             new_stamp = 0
@@ -71,9 +90,13 @@ class Grid:
             while curr_row is not self.ceiling:
                 new_stamp += 1
                 curr_row.timestamp = new_stamp
+                curr_row = curr_row.next_row
+            self.timestamp = new_stamp
 
     def get_next_row_or_make_new_row(self, curr_row: Row) -> Row:
-        # if next row is the tail sentinel, make a new row and insert it
+        """
+        If next row is the tail sentinel, make a new row and insert it.
+        """
         if curr_row.next_row is self.ceiling:
             self.timestamp += 1
             self.prevent_timestamp_overflow()
@@ -90,32 +113,38 @@ class Grid:
         return curr_row.next_row
 
     def fill_columns_in_row(self, row: Row, columns: List[int]):
-        # print("visible before placement: ", [x.row.timestamp for x in self.visible_rows])
+        """
+        Fills columns in a row. Every move is assumed valid, so there
+        is no protection against illegal moves here. If a row is completed
+        by filling the specified columns, the row will be removed. Otherwise,
+        row visibility will be updated as necessary.
+        """
         for column in columns:
             row.place_in_column(column)
         # clear the row if it is complete or update row visibility
         if row.is_complete():
             self.remove_row(row)
         else:
-            # update row visiblity in the column
-            # the only time row visibility does not need to be updated is when
-            # the addition(s) to the row immediately clears it, since remove_row()
-            # also updates visibility if necessary
             for column in columns:
                 if row.timestamp > self.visible_rows[column].timestamp:
                     self.visible_rows[column].row = row
-        # print("visible after placement: ", [x.row.timestamp for x in self.visible_rows])
     
     def remove_row(self, row: Row):
-        """Remove row from the doubly linked list and update visible rows if necessary"""
+        """
+        Remove row from the doubly linked list and update visible rows if necessary.
+        The visible rows need to be updated if the row removed was visible in any column.
+        The expectation for normal tetris is that this would save signficant work, since
+        cleared rows are not necessarily near the top of the stack. In this simplified
+        tetris, rows generally will be removed closer to the top of the stack, but this
+        still saves work in that work to find the newly visible row only needs to be performed
+        upon removing a currently visible row.
+        """
         row.prev_row.next_row = row.next_row
         row.next_row.prev_row = row.prev_row
         # decrement stack height when a row is removed
         self.height -= 1
 
-        # the visible rows need to be updated if the row removed was a visible row
-        # at worst, we perform roughly equivalent work to shifting the whole grid
-        # the expectation is 
+        # update row visibility
         for col in range(len(self.visible_rows)):
             # if the removed row was visible, it needs to be updated
             if row is self.visible_rows[col].row:

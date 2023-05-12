@@ -2,6 +2,7 @@ from simpletetris.grid import Grid
 from simpletetris.row import Row
 from simpletetris.tetrimino import IBlock, JBlock, LBlock, QBlock, SBlock, TBlock, ZBlock
 from typing import List, Tuple
+import argparse
 import sys
 
 def spawn_tetrimino(name: str, offset: int):
@@ -21,33 +22,31 @@ def spawn_tetrimino(name: str, offset: int):
         case "Z":
             return ZBlock(offset)
 
-# test_sequence = ["I0", "I4", "Q8"]
-# test_sequence = ["T1","Z3","I4"]
-# test_sequence = ["Q0","I2","I6","I0","I6","I6","Q2","Q4"]
-# grid = Grid()
-# for block in test_sequence:
-#     tetrimino = spawn_tetrimino(block[0], int(block[1]))
-#     tetrimino.place_on_grid(grid)
-#     grid.print_grid()
-
-def read_input_file(file_name: str) -> List[List[str]]:
-    with open(file_name, "r") as input_file:
-        input_lines = [[parse_shape_and_left_offset(tetris_input) for tetris_input in line.split(",")] for line in input_file]
-        return input_lines
-
 def parse_shape_and_left_offset(tetris_input: str) -> Tuple[str, int]:
     return (tetris_input[0], int(tetris_input[1]))
 
-def play_simplified_tetris(input_file:str):
-    block_sequences = read_input_file(input_file)
-    grid = Grid()
-    for input_line in block_sequences:
-        for block, offset in input_line:
-            tetrimino = spawn_tetrimino(block, offset)
-            # print("timestamp", [x.row.timestamp for x in grid.visible_rows if isinstance(x.row, Row)])
-            tetrimino.place_on_grid(grid)
-        print(input_line)
-        grid.print_grid()
+def play_input_line(grid: Grid, input_line: List[Tuple[str, int]], verbose: bool = False):
+    for block, offset in input_line:
+        tetrimino = spawn_tetrimino(block, offset)
+        tetrimino.place_on_grid(grid)
+    return grid.height
 
-if __name__=="__main__":
-    play_simplified_tetris(sys.argv[1])
+def play_simplified_tetris(input_file: str, output_file: str, verbose: bool):
+    grid = Grid()
+    with open(output_file, "w") as out_file:
+        with open(input_file, "r") as in_file:
+            for line in in_file:
+                input_line = [parse_shape_and_left_offset(tetris_input) for tetris_input in line.split(",")]
+                curr_stack_height = play_input_line(grid, input_line)
+                out_file.write(str(curr_stack_height))
+                if verbose:
+                    print(line.rstrip())
+                    grid.print_grid()
+
+def main_cli():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", "-i", type=str, help="path to input.txt file containing tetris inputs")
+    parser.add_argument("--output", "-o", type=str, help="name of output file in which to write results")
+    parser.add_argument("--verbose", "-v", action=argparse.BooleanOptionalAction)
+    args = parser.parse_args()
+    play_simplified_tetris(args.input, args.output, args.verbose)

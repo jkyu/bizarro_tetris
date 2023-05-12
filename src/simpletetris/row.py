@@ -1,4 +1,11 @@
 class Row:
+    """
+    Row objects hold information about which columns are occupied.
+    This information is negative (the row stores the columns that are
+    emtpy) under the assumption that a tetris board is usually dense. 
+    The row object will also store a monotonic timestamp for the row,
+    as new rows will only be inserted from the top of the board.
+    """
     def __init__(self, prev_row=None, next_row=None, timestamp=0, num_columns=10):
         self.prev_row = prev_row
         self.next_row = next_row
@@ -15,7 +22,7 @@ class Floor:
     """Head sentinel node."""
     def __init__(self):
         self.next_row = None
-        self.timestamp = -1
+        self.timestamp = 0
 
 class Ceiling:
     """Tail sentinel node."""
