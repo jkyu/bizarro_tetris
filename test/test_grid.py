@@ -10,8 +10,8 @@ def grid():
     grid.height = 2
 
     # place two rows in the grid
-    row1 = Row(prev_row = grid.floor, next_row = None, timestamp = 1)
-    row2 = Row(prev_row = row1, next_row = grid.ceiling, timestamp = 2)
+    row1 = Row(prev_row=grid.floor, next_row=None, timestamp=1)
+    row2 = Row(prev_row=row1, next_row=grid.ceiling, timestamp=2)
     row1.next_row = row2
     grid.floor.next_row = row1
     grid.ceiling.prev_row = row2
@@ -24,6 +24,7 @@ def grid():
 
     grid.visible_rows = [VisibleRow(row2) for _ in range(9)] + [VisibleRow(row1)]
     return grid
+
 
 def get_num_rows(grid: Grid) -> int:
     """
@@ -174,7 +175,7 @@ class TestGrid:
             1|--------ox|
         """
         row2 = grid.ceiling.prev_row
-        row3 = Row(prev_row = row2, next_row = grid.ceiling, timestamp = 3)
+        row3 = Row(prev_row=row2, next_row=grid.ceiling, timestamp=3)
         row2.next_row = row3
         grid.ceiling.prev_row = row3
         grid.height += 1
@@ -182,7 +183,7 @@ class TestGrid:
         for i in range(9):
             grid.visible_rows[i].row = row3
             assert grid.visible_rows[i].timestamp == row3.timestamp
-        expected_visible_row_timestamps = [3]*9 + [1]
+        expected_visible_row_timestamps = [3] * 9 + [1]
         expected_height = grid.height - 1
 
         grid.remove_row(row2)
@@ -190,7 +191,7 @@ class TestGrid:
         assert grid.height == expected_height
         visible_row_timestamps = [row.timestamp for row in grid.visible_rows]
         assert visible_row_timestamps == expected_visible_row_timestamps
-    
+
     def test_remove_row_with_visibility_update(self, grid: Grid):
         """
         Test removal of a row that changes the visibility.
@@ -203,7 +204,7 @@ class TestGrid:
         where the new visible row will be the floor.
         """
         row1 = grid.floor.next_row
-        expected_visible_row_timestamps = [2]*9 + [0]
+        expected_visible_row_timestamps = [2] * 9 + [0]
         expected_height = grid.height - 1
 
         grid.remove_row(row1)
@@ -226,7 +227,7 @@ class TestGrid:
         """
         row2 = grid.ceiling.prev_row
         expected_height = grid.height - 1
-        expected_visible_row_timestamps = [0]*8 + [1]*2
+        expected_visible_row_timestamps = [0] * 8 + [1] * 2
 
         grid.fill_columns_in_row(row2, [9])
         # check height is reduced by 1 due to row removal
@@ -255,11 +256,11 @@ class TestGrid:
         grid.visible_rows[0].row = grid.floor
         grid.visible_rows[1].row = grid.floor
         expected_height = grid.height
-        expected_visible_row_timestamps = [2]*9 + [1]
+        expected_visible_row_timestamps = [2] * 9 + [1]
         current_visible_row_timestamps = [row.timestamp for row in grid.visible_rows]
         assert expected_visible_row_timestamps != current_visible_row_timestamps
 
-        grid.fill_columns_in_row(row2, [0,1])
+        grid.fill_columns_in_row(row2, [0, 1])
         # check height does not change
         assert grid.height == expected_height
         assert get_num_rows(grid) == expected_height

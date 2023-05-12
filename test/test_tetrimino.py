@@ -11,12 +11,13 @@ def grid_two_rows():
     grid.height = 2
 
     # place two rows in the grid
-    row1 = Row(prev_row = grid.floor, next_row = None, timestamp = 1)
-    row2 = Row(prev_row = row1, next_row = grid.ceiling, timestamp = 2)
+    row1 = Row(prev_row=grid.floor, next_row=None, timestamp=1)
+    row2 = Row(prev_row=row1, next_row=grid.ceiling, timestamp=2)
     row1.next_row = row2
     grid.floor.next_row = row1
     grid.ceiling.prev_row = row2
     return grid
+
 
 @pytest.fixture
 def grid_one_row():
@@ -31,7 +32,7 @@ def grid_one_row():
     grid.height = 1
 
     # place one row in the grid
-    row = Row(prev_row = grid.floor, next_row = grid.ceiling, timestamp = 1)
+    row = Row(prev_row=grid.floor, next_row=grid.ceiling, timestamp=1)
     grid.floor.next_row = row
     grid.ceiling.prev_row = row
 
@@ -42,6 +43,7 @@ def grid_one_row():
         grid.visible_rows[i].row = row
 
     return grid
+
 
 class TestIBlock:
     def test_iblock_drop(self, grid_one_row: Grid):
@@ -60,7 +62,7 @@ class TestIBlock:
         expected_row1_empty_cols = {0, 1, 5, 6, 7, 9}
         expected_row2_empty_cols = {0, 1, 2, 3, 8, 9}
         expected_height = grid.height + 1
-        expected_visible_row_timestamps = [0]*2 + [1]*2 + [2]*4 + [1, 0]
+        expected_visible_row_timestamps = [0] * 2 + [1] * 2 + [2] * 4 + [1, 0]
 
         block = tetris.spawn_tetrimino("I", 4)
         block.place_on_grid(grid)
@@ -102,7 +104,7 @@ class TestIBlock:
 
         expected_row_empty_cols = set(row2.empty_columns)
         expected_height = grid.height - 1
-        expected_visible_row_timestamps = [0]*7 + [2]*3
+        expected_visible_row_timestamps = [0] * 7 + [2] * 3
 
         block = tetris.spawn_tetrimino("I", 1)
         block.place_on_grid(grid)
@@ -117,6 +119,7 @@ class TestIBlock:
         # check that visibility is correct
         visible_row_timestamps = [row.timestamp for row in grid.visible_rows]
         assert visible_row_timestamps == expected_visible_row_timestamps
+
 
 class TestJBlock:
     def test_jblock_drop(self, grid_one_row: Grid):
@@ -189,7 +192,7 @@ class TestJBlock:
         expected_row1_empty_cols = set(range(10)) - {2, 7, 8, 9}
         expected_row2_empty_cols = set(range(10)) - {2}
         expected_height = grid.height
-        expected_visible_row_timestamps = [0, 0, 3] +[0]*4 + [2]*3
+        expected_visible_row_timestamps = [0, 0, 3] + [0] * 4 + [2] * 3
 
         block = tetris.spawn_tetrimino("J", 1)
         block.place_on_grid(grid)
@@ -207,6 +210,7 @@ class TestJBlock:
         # check that visibility is correct
         visible_row_timestamps = [row.timestamp for row in grid.visible_rows]
         assert visible_row_timestamps == expected_visible_row_timestamps
+
 
 class TestLBlock:
     def test_lblock_drop(self, grid_one_row: Grid):
@@ -279,7 +283,7 @@ class TestLBlock:
         expected_row1_empty_cols = set(range(10)) - {1, 7, 8, 9}
         expected_row2_empty_cols = set(range(10)) - {1}
         expected_height = grid.height
-        expected_visible_row_timestamps = [0, 3] +[0]*5 + [2]*3
+        expected_visible_row_timestamps = [0, 3] + [0] * 5 + [2] * 3
 
         block = tetris.spawn_tetrimino("L", 1)
         block.place_on_grid(grid)
@@ -297,6 +301,7 @@ class TestLBlock:
         # check that visibility is correct
         visible_row_timestamps = [row.timestamp for row in grid.visible_rows]
         assert visible_row_timestamps == expected_visible_row_timestamps
+
 
 class TestQBlock:
     def test_qblock_drop(self, grid_one_row: Grid):
@@ -362,7 +367,7 @@ class TestQBlock:
 
         expected_row_empty_cols = {0, 3, 4, 5, 6}
         expected_height = grid.height - 1
-        expected_visible_row_timestamps = [0, 2, 2] +[0]*4 + [2]*3
+        expected_visible_row_timestamps = [0, 2, 2] + [0] * 4 + [2] * 3
 
         block = tetris.spawn_tetrimino("Q", 1)
         block.place_on_grid(grid)
@@ -377,6 +382,7 @@ class TestQBlock:
         # check that visibility is correct
         visible_row_timestamps = [row.timestamp for row in grid.visible_rows]
         assert visible_row_timestamps == expected_visible_row_timestamps
+
 
 class TestTBlock:
     def test_tblock_drop_left_fit(self, grid_one_row: Grid):
@@ -511,7 +517,7 @@ class TestTBlock:
 
         expected_row_empty_cols = {2}
         expected_height = grid.height - 1
-        expected_visible_row_timestamps = [1, 1, 0] + [1]*7
+        expected_visible_row_timestamps = [1, 1, 0] + [1] * 7
 
         block = tetris.spawn_tetrimino("T", 0)
         block.place_on_grid(grid)
@@ -549,7 +555,7 @@ class TestTBlock:
             grid.visible_rows[i].row = row2
 
         expected_height = 0
-        expected_visible_row_timestamps = [0]*10
+        expected_visible_row_timestamps = [0] * 10
 
         block = tetris.spawn_tetrimino("T", 0)
         block.place_on_grid(grid)
@@ -562,6 +568,7 @@ class TestTBlock:
         # check that visibility is correct
         visible_row_timestamps = [row.timestamp for row in grid.visible_rows]
         assert visible_row_timestamps == expected_visible_row_timestamps
+
 
 class TestSBlock:
     def test_sblock_drop_left_overhang(self, grid_one_row: Grid):
@@ -662,7 +669,7 @@ class TestSBlock:
 
         expected_row_empty_cols = {0, 1, 4, 5, 6}
         expected_height = grid.height - 1
-        expected_visible_row_timestamps = [0, 0, 2, 2] +[0]*3 + [2]*3
+        expected_visible_row_timestamps = [0, 0, 2, 2] + [0] * 3 + [2] * 3
 
         block = tetris.spawn_tetrimino("S", 1)
         block.place_on_grid(grid)
@@ -677,6 +684,7 @@ class TestSBlock:
         # check that visibility is correct
         visible_row_timestamps = [row.timestamp for row in grid.visible_rows]
         assert visible_row_timestamps == expected_visible_row_timestamps
+
 
 class TestZBlock:
     def test_zblock_drop_right_overhang(self, grid_one_row: Grid):
@@ -777,7 +785,7 @@ class TestZBlock:
 
         expected_row_empty_cols = set(range(2, 7))
         expected_height = grid.height - 1
-        expected_visible_row_timestamps = [2, 2] +[0]*5 + [2]*3
+        expected_visible_row_timestamps = [2, 2] + [0] * 5 + [2] * 3
 
         block = tetris.spawn_tetrimino("Z", 0)
         block.place_on_grid(grid)

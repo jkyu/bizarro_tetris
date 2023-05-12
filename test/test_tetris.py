@@ -14,6 +14,15 @@ class TestTetris:
         assert tetris.play_input_line(grid, test_sequence2) == 4
 
     def test_play_input_line_sequence3(self):
-        test_sequence3 = [("Q", 0), ("I", 2), ("I", 6), ("I", 0), ("I", 6), ("I", 6), ("Q", 2), ("Q", 4)]
+        test_sequence3 = [
+            ("Q", 0),
+            ("I", 2),
+            ("I", 6),
+            ("I", 0),
+            ("I", 6),
+            ("I", 6),
+            ("Q", 2),
+            ("Q", 4),
+        ]
         grid = Grid()
         assert tetris.play_input_line(grid, test_sequence3) == 3

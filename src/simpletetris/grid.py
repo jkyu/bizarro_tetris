@@ -3,6 +3,7 @@ from typing import List
 NUM_COLUMNS = 10
 MAX_TIMESTAMP = 1000
 
+
 class Row:
     """
     A class for modeling each row in the tetris grid. It holds information
@@ -26,7 +27,10 @@ class Row:
         always be higher in the tetris stack than a row with a smaller timestamp
         because new rows are added to the top of the grid monotonically.
     """
-    def __init__(self, prev_row: "Row"=None, next_row: "Row"=None, timestamp: int=0):
+
+    def __init__(
+        self, prev_row: "Row" = None, next_row: "Row" = None, timestamp: int = 0
+    ):
         self.prev_row = prev_row
         self.next_row = next_row
         self.empty_columns = set(range(NUM_COLUMNS))
@@ -37,6 +41,7 @@ class Row:
 
     def place_in_column(self, column: int):
         self.empty_columns.remove(column)
+
 
 class Floor:
     """
@@ -51,9 +56,11 @@ class Floor:
     timestamp: int
         The minimum timestamp. All other rows have larger timestamps.
     """
+
     def __init__(self):
         self.next_row = None
         self.timestamp = 0
+
 
 class Ceiling:
     """
@@ -68,9 +75,11 @@ class Ceiling:
     timestamp: int
         The maximum timestamp. All other rows have smaller timestamps.
     """
+
     def __init__(self):
         self.prev_row = None
         self.timestamp = float("inf")
+
 
 class VisibleRow:
     """
@@ -84,6 +93,7 @@ class VisibleRow:
     row: Row
         the row that is currently visible
     """
+
     def __init__(self, row: Row):
         self.row = row
 
@@ -96,6 +106,7 @@ class VisibleRow:
 
     def __eq__(self, other: "VisibleRow") -> bool:
         return self.timestamp == other.timestamp
+
 
 class Grid:
     """
@@ -121,6 +132,7 @@ class Grid:
     visible_rows: List[VisibleRow]
         An index for the currently visible row in each column.
     """
+
     def __init__(self):
         # set up doubly-linked list of rows with floor and ceiling sentinels.
         self.floor = Floor()
@@ -142,7 +154,7 @@ class Grid:
         print(f"Grid State: stack height = {self.height}")
         curr_row = self.ceiling.prev_row
         while curr_row is not self.floor:
-            line = ["o"]*NUM_COLUMNS
+            line = ["o"] * NUM_COLUMNS
             for empty_column in curr_row.empty_columns:
                 line[empty_column] = "-"
             print(f"{curr_row.timestamp:<3}|" + "".join(line) + "|")
@@ -159,7 +171,9 @@ class Grid:
         """
         return self.visible_rows[column]
 
-    def get_next_n_rows(self, visible_row: VisibleRow, n: int, include_current_row: bool = False) -> List[Row]:
+    def get_next_n_rows(
+        self, visible_row: VisibleRow, n: int, include_current_row: bool = False
+    ) -> List[Row]:
         """
         Return the next n rows starting from the visible_row. If not enough
         rows currently exist in the grid, they will be created so that n rows
@@ -211,9 +225,7 @@ class Grid:
             self.timestamp += 1
             self.prevent_timestamp_overflow()
             new_row = Row(
-                prev_row = curr_row,
-                next_row = self.ceiling,
-                timestamp=self.timestamp
+                prev_row=curr_row, next_row=self.ceiling, timestamp=self.timestamp
             )
             curr_row.next_row = new_row
             self.ceiling.prev_row = new_row
@@ -243,7 +255,7 @@ class Grid:
             for column in columns:
                 if row.timestamp > self.visible_rows[column].timestamp:
                     self.visible_rows[column].row = row
-    
+
     def remove_row(self, row: Row):
         """
         Remove row from the doubly linked list and update visible rows if necessary.
