@@ -32,9 +32,9 @@ Options for excising a cleared row with an array-based implementation include:
 - making a new outer list that excludes cleared row, e.g., by slicing and then concatenating to remove the cleared row. This incurs the cost of traversing all rows to build a new list and the memory cost of allocating all rows to the new outer list.
 - moving the tetris stack one unit down, which incurs the cost modifying all of the rows above the cleared row. This gets worse if the cleared row is lower in the tetris stack.
 
-Compared to the linked list solution, the array-based solution takes a hit in memory or grid traversal (or both) when removing a cleared line. In all fairness, these drawbacks would not be noticeable because of the small scale of this problem, where the stack height is not expected to exceed 100 rows and the grid width is fixed to 10 columns. Additionally, while frequent removal of low rows would be common in a standard tetris game (e.g., ["n-wide" combo setups](https://harddrop.com/wiki/Combo_Setups) or the stacking strategy of leaving one column open for 4-line clears with the vertical I-block), it became clear after a few examples that most cleared lines in this simplified tetris version come near the top of the stack since blocks cannot be rotated. This reduces the savings afforded by the doubly linked list design (though row removals are still constant memory!).
+Compared to the linked list solution, the array-based solution takes a hit in memory or grid traversal (or both) when removing a cleared line. In all fairness, these drawbacks would not be noticeable because of the small scale of this problem, where the stack height is not expected to exceed 100 rows and the grid width is fixed to 10 columns. Additionally, while frequent removal of low rows would be common in a standard tetris game (e.g., ["n-wide" combo setups](https://harddrop.com/wiki/Combo_Setups) or the stacking strategy of leaving one column open for 4-line clears with the vertical I-block), it became clear after a few examples that most cleared lines in this simplified tetris version come near the top of the stack since blocks cannot be rotated. This reduces the savings afforded by the doubly linked list design (though row removals are still constant memory!). Due to a bookkeeping problem (discussed below) the linked list and array-based solutions will have the same worst case `O(row*column)` computational scaling when a row is cleared, but the linked list implementation could have better average case performance when low rows are frequently removed.
 
-The doubly linked list solution does come with some drawbacks. 
+The doubly linked list solution does come with some drawbacks.
 The most obvious is the added complexity of the implementation, especially with the bookkeeping required to maintain an index of the "visible rows."
 A "visible row" refers to a row that I could see if I looked straight down into the tetris stack from the top.
 These are the rows that are candidates for collisions with newly spawned tetris blocks.
@@ -58,7 +58,7 @@ The updated grid would appear as:
 I believe the array-based solution may have a similar bookkeeping problem if we want to avoid finding collisions for a block on its way down from the top of the grid.
 Thankfully, I have a bunch of tests to show that bookkeeping for the linked list solution is handled properly.
 
-A second drawback is the additional memory overhead of making each row a linked list node instead of an array, but this is the tradeoff for reducing the memory cost of row removal.
+A second drawback is the additional memory overhead of making each row a linked list node instead of an array (although not asymptotically worse than the array-base solution due to the capped grid height), but this is the tradeoff for reducing the memory cost of row removal.
 
 The third drawback is that the linked list solution would not work well in a dynamic tetris implementation, where a block falls one cell per time interval. 
 An array-based grid would be preferable there to handle motion of the falling block (and then maybe the stack shifting due to cleared lines doesn't sound so bad).
