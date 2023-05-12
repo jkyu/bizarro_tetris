@@ -55,14 +55,14 @@ def main_cli():
     )
     args = parser.parse_args()
 
-    grid = Grid()
     for line in sys.stdin:
+        grid = Grid()
         input_line = [
             parse_shape_and_left_offset(tetris_input)
             for tetris_input in line.split(",")
         ]
         curr_stack_height = play_input_line(grid, input_line)
-        print(curr_stack_height)
         if args.verbose:
             print(line.rstrip())
             grid.print_grid()
+        print(curr_stack_height)
